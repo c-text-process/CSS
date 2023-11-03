@@ -1,64 +1,63 @@
 #include <stdio.h>
-#include "SDL.h"
+#include <stdlib.h>
+#include <windows.h>
 
-#pragma comment(lib, "SDL2main.lib")
-#pragma comment(lib, "SDL2.lib")
+int main() {
+    char* inputText = NULL;
+    size_t bufferSize = 0;
 
-SDL_Window* window;
-SDL_Renderer* renderer;
+    printf("텍스트를 입력하세요 (종료하려면 Ctrl+C를 누르세요, Ctrl+S로 저장):\n");
 
-int SDL_main(int argc, char* argv[])
-{
-	printf("Start\n");
+    while (1) {
+        int c = fgetc(stdin);
 
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("Could not initialize SDL! (%s)\n", SDL_GetError());
-		return -1;
-	}
+        if (c == EOF || c == '\n') {
+            if (bufferSize > 0) {
+                // 텍스트를 화면에 출력
+                printf("입력한 텍스트: %s\n", inputText);
 
-	// Create window
-	window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL);
-	if (window == NULL) {
-		printf("Could not create window! (%s)\n", SDL_GetError());
-		return -1;
-	}
+                // 바탕화면 경로를 얻기 위한 버퍼
+                char desktopPath[MAX_PATH];
+                if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, desktopPath))) {
+                   
 
-	// Create renderer
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
-	if (renderer == NULL) {
-		printf("Could not create renderer! (%s)\n", SDL_GetError());
-		return -1;
-	}
+                    // 파일에 저장
+                char filePath[MAX_PATH];
+                sprintf(filePath, "%s\\saved.txt", desktopPath);
+                    FILE* file = fopen(filePath, "w");
+                    if (file != NULL) {
+                        fputs(inputText, file);
+                        fclose(file);
+                        printf("텍스트가 바탕화면의 'saved.txt' 파일로 저장되었습니다.\n");
+                    }
+                    else {
+                        printf("파일 저장 실패!\n");
+                    }
+                }
+                else {
+                    printf("바탕화면 경로를 찾을 수 없습니다.\n");
+                }
 
-	// Clear renderer (white)
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(renderer);
+                free(inputText);
+                inputText = NULL;
+                bufferSize = 0;
+            }
+        }
+        else {
+            bufferSize++;
+            char* newText = (char*)realloc(inputText, bufferSize);
+            if (newText == NULL) {
+                // 동적 메모리 할당 실패
+                printf("메모리 할당 실패!\n");
+                free(inputText); // 기존 메모리 해제
+                return 1;
+            }
+            inputText = newText;
+            inputText[bufferSize - 1] = (char)c;
+        }
+    }
 
-	// Draw rect (red)
-	SDL_Rect r = { 50, 50, 100, 100 };
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderDrawRect(renderer, &r);
+    free(inputText);
 
-	// Update screen
-	SDL_RenderPresent(renderer);
-
-	SDL_Event event;
-	int done = 0;
-
-	while (!done) {
-		SDL_PollEvent(&event);
-
-		if (event.type == SDL_QUIT) {
-			done = 1;
-		}
-	}
-
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-
-	printf("End\n");
-
-	return 0;
+    return 0;
 }
