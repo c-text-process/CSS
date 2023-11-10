@@ -1,63 +1,92 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
+
+char* getkey();
 
 int main() {
-    char* inputText = NULL;
-    size_t bufferSize = 0;
+    printf("텍스트를 입력하세요 (종료하려면 Ctrl+s를 누르세요, Ctrl+q로 파일 불러오기):\n");
+    char* inputText = getkey();
+    printf("입력된 값 : %s\n", inputText);
 
-    printf("텍스트를 입력하세요 (종료하려면 Ctrl+C를 누르세요, Ctrl+S로 저장):\n");
-
-    while (1) {
-        int c = fgetc(stdin);
-
-        if (c == EOF || c == '\n') {
-            if (bufferSize > 0) {
-                // 텍스트를 화면에 출력
-                printf("입력한 텍스트: %s\n", inputText);
-
-                // 바탕화면 경로를 얻기 위한 버퍼
-                char desktopPath[MAX_PATH];
-                if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, desktopPath))) {
-                   
-
-                    // 파일에 저장
-                char filePath[MAX_PATH];
-                sprintf(filePath, "%s\\saved.txt", desktopPath);
-                    FILE* file = fopen(filePath, "w");
-                    if (file != NULL) {
-                        fputs(inputText, file);
-                        fclose(file);
-                        printf("텍스트가 바탕화면의 'saved.txt' 파일로 저장되었습니다.\n");
-                    }
-                    else {
-                        printf("파일 저장 실패!\n");
-                    }
-                }
-                else {
-                    printf("바탕화면 경로를 찾을 수 없습니다.\n");
-                }
-
-                free(inputText);
-                inputText = NULL;
-                bufferSize = 0;
-            }
-        }
-        else {
-            bufferSize++;
-            char* newText = (char*)realloc(inputText, bufferSize);
-            if (newText == NULL) {
-                // 동적 메모리 할당 실패
-                printf("메모리 할당 실패!\n");
-                free(inputText); // 기존 메모리 해제
-                return 1;
-            }
-            inputText = newText;
-            inputText[bufferSize - 1] = (char)c;
-        }
+    FILE* file = fopen("test.txt", "w");
+    if (file != NULL) {
+        fputs(inputText, file);
+        printf("텍스트가 바탕화면의 'test.txt' 파일로 저장되었습니다.\n");
+        fclose(file);
+    }
+    else {
+        printf("파일 저장 실패!\n");
     }
 
     free(inputText);
 
     return 0;
+}
+
+char* getkey() {
+    char* String = NULL;
+    int len = 0;
+    char filePath[256]; // 파일 경로를 담을 변수
+
+    while (1) {
+        char c = getchar();
+
+        if (c != EOF) {
+            if (c == 19) { // Ctrl+s
+                String[len] = '\0';
+                break;
+            }
+            else if (c == 17) { // Ctrl+q
+                printf("\n파일 경로와 이름을 입력하세요 (예: C:/path/to/file.txt): ");
+                scanf("%s", filePath);
+
+                FILE* readFile = fopen(filePath, "r");
+                if (readFile != NULL) {
+                    fseek(readFile, 0, SEEK_END);
+                    long fileSize = ftell(readFile);
+                    fseek(readFile, 0, SEEK_SET);
+
+                    String = (char*)realloc(String, sizeof(char) * (fileSize + 1));
+                    fread(String, sizeof(char), fileSize, readFile);
+                    String[fileSize] = '\0'; // Null-terminate the string
+
+                    fclose(readFile);
+
+                    // 읽은 내용 콘솔에 출력
+                    printf("파일 내용 확인:\n%s", String);
+                }
+                else {
+                    printf("파일 열기 실패!\n");
+                }
+            }
+            else {
+                String = (char*)realloc(String, sizeof(char) * (len + 2));
+                String[len] = c;
+                String[len + 1] = '\0'; // Null-terminate the string
+                len++;
+            }
+        }
+    }
+
+    // 사용자가 불러온 텍스트를 수정할 수 있게 추가 입력을 받음
+    printf("\n텍스트를 수정하세요. (종료하려면 Ctrl+s를 누르세요):\n");
+    while (1) {
+        char c = getchar();
+
+        if (c != EOF) {
+            if (c == 19) { // Ctrl+s
+                String[len] = '\0';
+                break;
+            }
+            else {
+                String = (char*)realloc(String, sizeof(char) * (len + 2));
+                String[len] = c;
+                String[len + 1] = '\0'; // Null-terminate the string
+                len++;
+            }
+        }
+    }
+
+    return String;
 }
