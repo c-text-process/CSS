@@ -5,18 +5,18 @@
 char* getkey();
 
 int main() {
-    printf("ÅØ½ºÆ®¸¦ ÀÔ·ÂÇÏ¼¼¿ä (Á¾·áÇÏ·Á¸é Ctrl+s¸¦ ´©¸£¼¼¿ä, Ctrl+q·Î ÆÄÀÏ ºÒ·¯¿À±â):\n");
+    printf("í…ìŠ¤íŠ¸ë¥¼ ì…ë ¥í•˜ì„¸ìš” (ì¢…ë£Œí•˜ë ¤ë©´ Ctrl+së¥¼ ëˆ„ë¥´ì„¸ìš”, Ctrl+që¡œ íŒŒì¼ ë¶ˆëŸ¬ì˜¤ê¸°):\n");
     char* inputText = getkey();
-    printf("ÀÔ·ÂµÈ °ª : %s\n", inputText);
+    printf("ì…ë ¥ëœ ê°’ : %s\n", inputText);
 
     FILE* file = fopen("test.txt", "w");
     if (file != NULL) {
         fputs(inputText, file);
-        printf("ÅØ½ºÆ®°¡ ¹ÙÅÁÈ­¸éÀÇ 'test.txt' ÆÄÀÏ·Î ÀúÀåµÇ¾ú½À´Ï´Ù.\n");
+        printf("í…ìŠ¤íŠ¸ê°€ 'test.txt' íŒŒì¼ë¡œ ì €ì¥ë˜ì—ˆìŠµë‹ˆë‹¤.\n");
         fclose(file);
     }
     else {
-        printf("ÆÄÀÏ ÀúÀå ½ÇÆĞ!\n");
+        printf("íŒŒì¼ ì €ì¥ ì‹¤íŒ¨!\n");
     }
 
     free(inputText);
@@ -27,7 +27,7 @@ int main() {
 char* getkey() {
     char* String = NULL;
     int len = 0;
-    char filePath[256]; // ÆÄÀÏ °æ·Î¸¦ ´ãÀ» º¯¼ö
+    char filePath[256]; // íŒŒì¼ ê²½ë¡œë¥¼ ë‹´ì„ ë³€ìˆ˜
 
     while (1) {
         char c = getchar();
@@ -38,8 +38,9 @@ char* getkey() {
                 break;
             }
             else if (c == 17) { // Ctrl+q
-                printf("\nÆÄÀÏ °æ·Î¿Í ÀÌ¸§À» ÀÔ·ÂÇÏ¼¼¿ä (¿¹: C:/path/to/file.txt): ");
+                printf("\níŒŒì¼ ê²½ë¡œì™€ ì´ë¦„ì„ ì…ë ¥í•˜ì„¸ìš” (ì˜ˆ: C:/path/to/file.txt): ");
                 scanf("%s", filePath);
+                getchar(); // ê°œí–‰ ë¬¸ì ì²˜ë¦¬
 
                 FILE* readFile = fopen(filePath, "r");
                 if (readFile != NULL) {
@@ -47,46 +48,30 @@ char* getkey() {
                     long fileSize = ftell(readFile);
                     fseek(readFile, 0, SEEK_SET);
 
-                    String = (char*)realloc(String, sizeof(char) * (fileSize + 1));
-                    fread(String, sizeof(char), fileSize, readFile);
-                    String[fileSize] = '\0'; // Null-terminate the string
+                    String = (char*)realloc(String, sizeof(char) * (len + fileSize + 1));
+                    size_t newLen = fread(String + len, sizeof(char), fileSize, readFile);
+                    String[len + newLen] = '\0'; // Null-terminate the string
 
                     fclose(readFile);
 
-                    // ÀĞÀº ³»¿ë ÄÜ¼Ö¿¡ Ãâ·Â
-                    printf("ÆÄÀÏ ³»¿ë È®ÀÎ:\n%s", String);
+                    len += newLen;
+                    printf("íŒŒì¼ ë‚´ìš© í™•ì¸:\n%s", String);
                 }
                 else {
-                    printf("ÆÄÀÏ ¿­±â ½ÇÆĞ!\n");
+                    printf("íŒŒì¼ ì—´ê¸° ì‹¤íŒ¨!\n");
                 }
             }
             else {
                 String = (char*)realloc(String, sizeof(char) * (len + 2));
                 String[len] = c;
-                String[len + 1] = '\0'; // Null-terminate the string
                 len++;
-            }
-        }
-    }
-
-    // »ç¿ëÀÚ°¡ ºÒ·¯¿Â ÅØ½ºÆ®¸¦ ¼öÁ¤ÇÒ ¼ö ÀÖ°Ô Ãß°¡ ÀÔ·ÂÀ» ¹ŞÀ½
-    printf("\nÅØ½ºÆ®¸¦ ¼öÁ¤ÇÏ¼¼¿ä. (Á¾·áÇÏ·Á¸é Ctrl+s¸¦ ´©¸£¼¼¿ä):\n");
-    while (1) {
-        char c = getchar();
-
-        if (c != EOF) {
-            if (c == 19) { // Ctrl+s
-                String[len] = '\0';
-                break;
-            }
-            else {
-                String = (char*)realloc(String, sizeof(char) * (len + 2));
-                String[len] = c;
-                String[len + 1] = '\0'; // Null-terminate the string
-                len++;
+                String[len] = '\0'; // Null-terminate the string
             }
         }
     }
 
     return String;
 }
+
+
+
