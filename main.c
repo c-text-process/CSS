@@ -7,23 +7,28 @@ char* getkey();
 int main() {
     printf("텍스트를 입력하세요 (종료하려면 Ctrl+s를 누르세요, Ctrl+q로 파일 불러오기):\n");
     char* inputText = getkey();
-    printf("입력된 값 : %s\n", inputText);
 
-    FILE* file = fopen("test.txt", "w");
-    if (file != NULL) {
-        fputs(inputText, file);
-        printf("텍스트가 'test.txt' 파일로 저장되었습니다.\n");
-        fclose(file);
+    if (inputText != NULL) {
+        printf("입력된 값 : %s\n", inputText);
+
+        FILE* file = fopen("test.txt", "w");
+        if (file != NULL) {
+            fputs(inputText, file);
+            printf("텍스트가 'test.txt' 파일로 저장되었습니다.\n");
+            fclose(file);
+        }
+        else {
+            printf("파일 저장 실패!\n");
+        }
+
+        free(inputText);
     }
     else {
-        printf("파일 저장 실패!\n");
+        printf("입력된 텍스트가 없습니다.\n");
     }
-
-    free(inputText);
 
     return 0;
 }
-
 char* getkey() {
     char* String = NULL;
     int len = 0;
@@ -34,7 +39,9 @@ char* getkey() {
 
         if (c != EOF) {
             if (c == 19) { // Ctrl+s
-                String[len] = '\0';
+                if (String != NULL) {
+                    String[len] = '\0'; // Null-terminate the string only if it's not NULL
+                }
                 break;
             }
             else if (c == 17) { // Ctrl+q
@@ -72,6 +79,3 @@ char* getkey() {
 
     return String;
 }
-
-
-
